@@ -1,0 +1,10 @@
+.mono-oboe {
+  padding: 8px;
+}
+
+.recentSearchTerm {
+  background-color: #FFF;
+  margin: 0 4px;
+  padding: 4px 8px;
+  display: inline-block;
+}
