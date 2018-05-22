@@ -1,11 +1,7 @@
-const counterKey = 'monooboe-counters';
-const recentKey = 'monooboe-recent'
-const componentDefault = `
-<div id="monooboe" class="area" style="display: block;">
-  Hello World
-</div>
-`;
+const COUNTER_KEY = 'monooboe-counters';
+const RECENT_KEY = 'monooboe-recent'
 const historyIcon = `
+<!-- -->
 <svg viewBox="0 0 448 448" class="icon radical-icon" x="0px" y="0px">
   <g>
       <polygon points="234.667,138.667 234.667,245.333 325.973,299.52 341.333,273.6 266.667,229.333 266.667,138.667       "/>
@@ -18,22 +14,30 @@ const historyIcon = `
 </svg>
 `;
 
-let port = chrome.runtime.connect();
-chrome.storage.sync.get([counterKey, recentKey], function(data) {
-  let path = decodeURIComponent(window.location.pathname);
-  let historyCounters = data[counterKey] || {};
-  let recent = data[recentKey] || [];
-  window.historyCounters = historyCounters; // Make sure to keep this out of final
+const SEARCH_ANCHOR_ID = 'search_sub';
+const SEARCH_CLASS = 'search_main';
+const CONTAINER_CLASS = 'mono-oboe';
+const HISTORY_ACTIVE_CLASS = 'history_area_active';
+const SEARCH_ACTIVE_CLASS = 'search_area_active';
 
-  let anchor = document.getElementById('search_sub');
+
+let port = chrome.runtime.connect();
+chrome.storage.sync.get([COUNTER_KEY, RECENT_KEY], function(data) {
+  let path = decodeURIComponent(window.location.pathname);
+  let historyCounters = data[COUNTER_KEY] || {};
+  let recent = data[RECENT_KEY] || [];
+
+  let anchor = document.getElementById(SEARCH_ANCHOR_ID);
   let linkAnchor = document.getElementById('input_methods');
 
-  let container = document.createElement('div');
-  container.classList.add('mono-oboe', 'area');
+  let container = document.createElement('div')
+  container.classList.add(CONTAINER_CLASS, 'area');
+  container.style.display = 'none';
   container.innerHTML = generateHistory(recent);
 
-  let history = document.createElement('div');
+  let history = document.createElement('div')
   history.classList.add('input_method_button', 'disable-mobile-hover-background');
+  history.id = 'history_button';
   history.innerHTML = historyIcon;
 
   anchor.append(container);
@@ -57,28 +61,74 @@ chrome.storage.sync.get([counterKey, recentKey], function(data) {
     }
     recent.unshift(query);
 
-    chrome.storage.sync.set({[counterKey]: historyCounters, [recentKey]: recent}, function() {
-      // container.innerHTML = `You have searched for ${query} a total of ${total} time(s).`;
-      console.log("hopefully saved");
-    });
+    chrome.storage.sync.set({[COUNTER_KEY]: historyCounters, [RECENT_KEY]: recent}, function() {});
   }
 });
 
+function clearBuiltInActiveSearches() {
+  let classes = document.body.classList;
+
+  if (classes.contains('speech_area_active')) {
+    document.getElementById('speech_button').click();
+  } else if (classes.contains('radical_area_active')) {
+    document.getElementById('radical_button').click();
+  } else if (classes.contains('handwriting_area_active')) {
+    document.getElementById('handwriting_button').click();
+  } else if (classes.contains('advanced_area_active')) {
+    document.getElementById('advanced_button').click();
+  }
+};
+
 function generateHistory(historyData) {
   let result = `
-    <div>These are your 10 most recent searches:</div>
+    <div id="historyDescription">These are your 10 most recent searches:</div>
   `;
-  historyData.forEach(word => result += `<div class="recentSearchTerm">${word}</div>`);
+  historyData.forEach(word => result += `<a href="/search/${word}"><div class="recentSearchTerm">${word}</div></a>`);
   return result;
 };
 
-function toggleHistory() {
-  if (!document.body.classList.contains('history_area_active')) {
-    document.getElementById('search_sub').style.height = '150px';
-  } else {
-    document.getElementById('search_sub').style.height = '0px';
+function closeHistory(e) {
+  if (e.target.closest('#handwriting_button, #radical_button, #speech_button, #advanced_button')) {
+    document.removeEventListener('click', closeHistory);
+    toggleHistory.bind(document.getElementById('history_button'))({
+      searchButtonClicked: true
+    });
   }
-  document.body.classList.toggle('search_area_active');
-  document.body.classList.toggle('history_area_active');
-  document.getElementById('search_main').classList.toggle('in');
 };
+
+function toggleHistory({e, searchButtonClicked}) {
+  if (!document.body.classList.contains(HISTORY_ACTIVE_CLASS)) {
+    if (!searchButtonClicked) {
+      clearBuiltInActiveSearches();
+    }
+
+    document.getElementById(SEARCH_ANCHOR_ID).style.height = '150px';
+    document.getElementById(SEARCH_CLASS).classList.add('in');
+
+    document.body.classList.add(SEARCH_ACTIVE_CLASS, HISTORY_ACTIVE_CLASS);
+    document.getElementsByClassName(CONTAINER_CLASS)[0].style.display = 'block';
+
+    this.classList.add(HISTORY_ACTIVE_CLASS);
+
+    document.addEventListener('click', closeHistory);
+  } else {
+    if (!searchButtonClicked) {
+      document.getElementById(SEARCH_ANCHOR_ID).style.height = '0px';
+      document.getElementById(SEARCH_CLASS).classList.remove('in');
+    }
+
+    document.body.classList.remove(SEARCH_ACTIVE_CLASS, HISTORY_ACTIVE_CLASS);
+    document.getElementsByClassName(CONTAINER_CLASS)[0].style.display = 'none';
+
+    this.classList.remove(HISTORY_ACTIVE_CLASS);
+  }
+};
+
+// This was an attempt to fix a bug where resizing the window closes the history search.
+// Because a height of 0px is being saved in the search bar object, and this code doesn't
+// have access to that, best to just leave the bug as is.
+// window.addEventListener('resize', function() {
+//   if (document.body.classList.contains('history_area_active')) {
+//     document.getElementById(SEARCH_ANCHOR_ID).style.height = '150px';
+//   }
+// });

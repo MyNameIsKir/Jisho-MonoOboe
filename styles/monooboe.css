@@ -2,6 +2,14 @@
   padding: 8px;
 }
 
+.history_area_active #history_button {
+  border-bottom: 3px solid #ffb200;
+}
+
+#historyDescription {
+  padding-bottom: 8px;
+}
+
 .recentSearchTerm {
   background-color: #FFF;
   margin: 0 4px;
