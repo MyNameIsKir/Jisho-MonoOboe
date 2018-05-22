@@ -1,49 +1,28 @@
+// Wouldn't it be great if ES6 modules worked with this?
+
+// ################################
+// MAIN
+// ################################
+
 const COUNTER_KEY = 'monooboe-counters';
-const RECENT_KEY = 'monooboe-recent'
-const historyIcon = `
-<!-- -->
-<svg viewBox="0 0 448 448" class="icon radical-icon" x="0px" y="0px">
-  <g>
-      <polygon points="234.667,138.667 234.667,245.333 325.973,299.52 341.333,273.6 266.667,229.333 266.667,138.667       "/>
-      <path d="M255.893,32C149.76,32,64,117.973,64,224H0l83.093,83.093l1.493,3.093L170.667,224h-64
-        c0-82.453,66.88-149.333,149.333-149.333S405.333,141.547,405.333,224S338.453,373.333,256,373.333
-        c-41.28,0-78.507-16.853-105.493-43.84L120.32,359.68C154.987,394.453,202.88,416,255.893,416C362.027,416,448,330.027,448,224
-        S362.027,32,255.893,32z"/>
-  </g>
-  <h4>History</h4>
-</svg>
-`;
-
-const SEARCH_ANCHOR_ID = 'search_sub';
-const SEARCH_CLASS = 'search_main';
-const CONTAINER_CLASS = 'mono-oboe';
-const HISTORY_ACTIVE_CLASS = 'history_area_active';
-const SEARCH_ACTIVE_CLASS = 'search_area_active';
-
+const RECENT_KEY = 'monooboe-recent';
 
 let port = chrome.runtime.connect();
 chrome.storage.sync.get([COUNTER_KEY, RECENT_KEY], function(data) {
-  let path = decodeURIComponent(window.location.pathname);
-  let historyCounters = data[COUNTER_KEY] || {};
   let recent = data[RECENT_KEY] || [];
+  let historyCounters = data[COUNTER_KEY] || {};
 
-  let anchor = document.getElementById(SEARCH_ANCHOR_ID);
-  let linkAnchor = document.getElementById('input_methods');
+  recent = track(recent, historyCounters);
+  recentHistory(recent);
+});
 
-  let container = document.createElement('div')
-  container.classList.add(CONTAINER_CLASS, 'area');
-  container.style.display = 'none';
-  container.innerHTML = generateHistory(recent);
 
-  let history = document.createElement('div')
-  history.classList.add('input_method_button', 'disable-mobile-hover-background');
-  history.id = 'history_button';
-  history.innerHTML = historyIcon;
+// ################################
+// MONO OBOE TRACKING
+// ################################
 
-  anchor.append(container);
-  linkAnchor.append(history);
-
-  history.onclick = toggleHistory;
+function track(recent, historyCounters) {
+  let path = decodeURIComponent(window.location.pathname);
 
   if (path.includes('/search/')) {
     let query = path.replace(/\/search\/|%20%23sentences|%20%23kanji|%20%23names| ?#.*/gi, '');
@@ -62,8 +41,64 @@ chrome.storage.sync.get([COUNTER_KEY, RECENT_KEY], function(data) {
     recent.unshift(query);
 
     chrome.storage.sync.set({[COUNTER_KEY]: historyCounters, [RECENT_KEY]: recent}, function() {});
+
   }
-});
+
+  return recent;
+};
+
+// ################################
+// MONO OBOE INTERFACE
+// ################################
+
+function monoOboe(data) {
+
+};
+
+// ################################
+// RECENT HISTORY INTERFACE
+// ################################
+
+const SEARCH_ANCHOR_ID = 'search_sub';
+const SEARCH_CLASS = 'search_main';
+const CONTAINER_CLASS = 'mono-oboe';
+const HISTORY_ACTIVE_CLASS = 'history_area_active';
+const SEARCH_ACTIVE_CLASS = 'search_area_active';
+const HISTORY_BUTTON_ID = 'history_button';
+
+const historyIcon = `
+<!-- -->
+<svg viewBox="0 0 448 448" class="icon radical-icon" x="0px" y="0px">
+  <g>
+      <polygon points="234.667,138.667 234.667,245.333 325.973,299.52 341.333,273.6 266.667,229.333 266.667,138.667       "/>
+      <path d="M255.893,32C149.76,32,64,117.973,64,224H0l83.093,83.093l1.493,3.093L170.667,224h-64
+        c0-82.453,66.88-149.333,149.333-149.333S405.333,141.547,405.333,224S338.453,373.333,256,373.333
+        c-41.28,0-78.507-16.853-105.493-43.84L120.32,359.68C154.987,394.453,202.88,416,255.893,416C362.027,416,448,330.027,448,224
+        S362.027,32,255.893,32z"/>
+  </g>
+  <h4>History</h4>
+</svg>
+`;
+
+function recentHistory(recent) {
+  let anchor = document.getElementById(SEARCH_ANCHOR_ID);
+  let linkAnchor = document.getElementById('input_methods');
+
+  let container = document.createElement('div')
+  container.classList.add(CONTAINER_CLASS, 'area');
+  container.style.display = 'none';
+  container.innerHTML = generateHistory(recent);
+
+  let history = document.createElement('div')
+  history.classList.add('input_method_button', 'disable-mobile-hover-background');
+  history.id = HISTORY_BUTTON_ID;
+  history.innerHTML = historyIcon;
+
+  anchor.append(container);
+  linkAnchor.append(history);
+
+  history.onclick = toggleHistory;
+};
 
 function clearBuiltInActiveSearches() {
   let classes = document.body.classList;
@@ -90,7 +125,7 @@ function generateHistory(historyData) {
 function closeHistory(e) {
   if (e.target.closest('#handwriting_button, #radical_button, #speech_button, #advanced_button')) {
     document.removeEventListener('click', closeHistory);
-    toggleHistory.bind(document.getElementById('history_button'))({
+    toggleHistory.bind(document.getElementById(HISTORY_BUTTON_ID))({
       searchButtonClicked: true
     });
   }
