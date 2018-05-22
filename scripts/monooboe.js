@@ -14,6 +14,7 @@ chrome.storage.sync.get([COUNTER_KEY, RECENT_KEY], function(data) {
 
   recent = track(recent, historyCounters);
   recentHistory(recent);
+  monoOboe();
 });
 
 
@@ -40,7 +41,7 @@ function track(recent, historyCounters) {
     }
     recent.unshift(query);
 
-    chrome.storage.sync.set({[COUNTER_KEY]: historyCounters, [RECENT_KEY]: recent}, function() {});
+    chrome.storage.sync.set({[COUNTER_KEY]: historyCounters, [RECENT_KEY]: recent}, () => {});
 
   }
 
@@ -51,8 +52,20 @@ function track(recent, historyCounters) {
 // MONO OBOE INTERFACE
 // ################################
 
-function monoOboe(data) {
+const NAVIGATION_ANCHOR = '.nav-main_navigation ul.links';
+const NAV_LINK = `
+<a href="${chrome.runtime.getURL('/pages/index.html')}" target="_blank">
+  <span>MonoOboe</span>
+</a>
+`;
 
+function monoOboe() {
+  let navAnchor = document.querySelector(NAVIGATION_ANCHOR);
+
+  let navLink = document.createElement('li');
+  navLink.innerHTML = NAV_LINK;
+
+  navAnchor.prepend(navLink);
 };
 
 // ################################
@@ -84,7 +97,7 @@ function recentHistory(recent) {
   let anchor = document.getElementById(SEARCH_ANCHOR_ID);
   let linkAnchor = document.getElementById('input_methods');
 
-  let container = document.createElement('div')
+  let container = document.createElement('div');
   container.classList.add(CONTAINER_CLASS, 'area');
   container.style.display = 'none';
   container.innerHTML = generateHistory(recent);

@@ -1,0 +1,83 @@
+@font-face {
+  font-family: 'Yasashisa Gothic Tegaki';
+  src: url('/pages/fonts/やさしさゴシック手書き.otf');
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 1.6rem;
+}
+
+a {
+  color: #4A80B5;
+}
+
+p {
+  color: #666;
+}
+
+.top-padding-2 {
+  padding: 2rem 0;
+}
+
+.hr-top {
+  margin: 3rem 0;
+  background-color: #ddd;
+  border-radius: 5px;
+}
+
+.flex {
+  display: flex;
+}
+
+.margin-0 {
+  margin: 0;
+}
+
+.bottom {
+  align-self: flex-end;
+}
+
+#title-logo {
+  color: #666;
+  font-family: 'Yasashisa Gothic Tegaki';
+  width: fit-content;
+  border-left: .5rem solid #56d928;
+  padding-left: .67rem;
+}
+
+#title-logo:after {
+  content: "";
+  display: block;
+  padding-top: .5rem;
+  width: 75%;
+  float: right;
+  border-bottom: .5rem solid #56d928;
+}
+
+.table-border {
+  border: .25rem solid #ddd;
+  border-radius: .5rem;
+  padding: 1rem 2rem;
+}
+
+#history-table {
+  margin-top: 1rem;
+}
+
+#history-table th:last-child,
+#history-table td:last-child,
+#history-table th:nth-child(2),
+#history-table td:nth-child(2) {
+  text-align: right;
+}
+
+
+footer {
+  font-size: 1.25rem;
+  margin: 1rem 0;
+}
